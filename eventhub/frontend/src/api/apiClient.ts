@@ -342,7 +342,7 @@ export const chatAPI = {
 // -----------------------------------------------------------
 export const createChatSocket = (roomId: string, onEvent: (e: ChatSocketEvent) => void): WebSocket => {
   const token = localStorage.getItem("access_token");
-  const wsBase = BASE_URL.replace("http", "ws");
+  const wsBase = BASE_URL.replace("https://", "wss://").replace("http://", "ws://");
   // backend/main.py: chat router has prefix "/api/chat", websocket path "/ws/{room_id}"
   const ws = new WebSocket(`${wsBase}/api/chat/ws/${roomId}?token=${token}`);
 

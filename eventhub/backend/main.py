@@ -1,6 +1,7 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import tasks
 
 from routers import auth, chat, events, participants, tasks
 from routers.events import reports_router, sections_router, users_router
@@ -11,9 +12,17 @@ app = FastAPI(
     description="Платформа управления мероприятиями — ИТ-Кластер Сибири",
 )
 
+allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
