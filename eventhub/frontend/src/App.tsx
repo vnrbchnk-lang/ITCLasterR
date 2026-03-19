@@ -39,7 +39,7 @@ import { EventManagePage } from "./pages/EventManagePage";
 // ═══════════════════════════════════════════════════════════════
 // DIRECT FETCH HELPERS — вызовы к реальному бэкенду
 // ═══════════════════════════════════════════════════════════════
-const API_BASE = "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 function _authHeaders(): Record<string, string> {
   const t = localStorage.getItem("access_token");
   return t ? { Authorization: "Bearer " + t, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
@@ -2431,7 +2431,7 @@ function ParticipantDashboard({
         const token = localStorage.getItem("access_token") || "";
         await Promise.all(myEvents.map(async (ev: any) => {
           try {
-            const r = await fetch(`http://localhost:8000/api/events/${ev.id}/curators`, { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: "no-store" });
+            const r = await fetch(`${API_BASE}/api/events/${ev.id}/curators`, { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: "no-store" });
             if (r.ok) { const ms: any[] = await r.json(); if (ms.some((m: any) => m.user_id === user.id)) curatorEvIds.add(ev.id); }
           } catch {}
         }));
@@ -2451,7 +2451,7 @@ function ParticipantDashboard({
       await Promise.all(allSecs.map(async (sec: any) => {
         try {
           const token = localStorage.getItem("access_token") || "";
-          const r = await fetch(`http://localhost:8000/api/sections/${sec.id}/reports`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+          const r = await fetch(`${API_BASE}/api/sections/${sec.id}/reports`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
           recs[sec.id] = r.ok ? await r.json() : [];
         } catch { recs[sec.id] = []; }
       }));
@@ -2475,7 +2475,7 @@ function ParticipantDashboard({
       setSecModal({ open: false, eventId: "" }); return;
     }
     const token = localStorage.getItem("access_token") || "";
-    const url = secModal.section ? `http://localhost:8000/api/sections/${secModal.section.id}` : `http://localhost:8000/api/events/${eid}/sections`;
+    const url = secModal.section ? `${API_BASE}/api/sections/${secModal.section.id}` : `${API_BASE}/api/events/${eid}/sections`;
     const method = secModal.section ? "PATCH" : "POST";
     const r = await fetch(url, { method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify(form) });
     if (!r.ok) { const err = await r.json().catch(() => ({})); alert(err?.detail || `Ошибка ${r.status}`); return; }
@@ -2488,7 +2488,7 @@ function ParticipantDashboard({
   const deleteSec = async (sec: any) => {
     if (demoMode) { setCurSections(prev => prev.filter(s => s.id !== sec.id)); setDelSecTarget(null); return; }
     const token = localStorage.getItem("access_token") || "";
-    const r = await fetch(`http://localhost:8000/api/sections/${sec.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    const r = await fetch(`${API_BASE}/api/sections/${sec.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
     if (!r.ok && r.status !== 204) { alert("Ошибка удаления"); return; }
     setCurSections(prev => prev.filter(s => s.id !== sec.id)); setDelSecTarget(null);
   };
@@ -2501,7 +2501,7 @@ function ParticipantDashboard({
       setRepModal({ open: false, sectionId: "" }); return;
     }
     const token = localStorage.getItem("access_token") || "";
-    const url = repModal.report ? `http://localhost:8000/api/reports/${repModal.report.id}` : `http://localhost:8000/api/sections/${sid}/reports`;
+    const url = repModal.report ? `${API_BASE}/api/reports/${repModal.report.id}` : `${API_BASE}/api/sections/${sid}/reports`;
     const method = repModal.report ? "PATCH" : "POST";
     const r = await fetch(url, { method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify(form) });
     if (!r.ok) { const err = await r.json().catch(() => ({})); alert(err?.detail || `Ошибка ${r.status}`); return; }
@@ -2513,7 +2513,7 @@ function ParticipantDashboard({
   const deleteRep = async (rep: any) => {
     if (demoMode) { setCurReports(prev => ({ ...prev, [rep.section_id]: (prev[rep.section_id]||[]).filter((r: any) => r.id !== rep.id) })); setDelRepTarget(null); return; }
     const token = localStorage.getItem("access_token") || "";
-    const r = await fetch(`http://localhost:8000/api/reports/${rep.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    const r = await fetch(`${API_BASE}/api/reports/${rep.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
     if (!r.ok && r.status !== 204) { alert("Ошибка удаления"); return; }
     setCurReports(prev => ({ ...prev, [rep.section_id]: (prev[rep.section_id]||[]).filter((r: any) => r.id !== rep.id) })); setDelRepTarget(null);
   };
@@ -2532,7 +2532,7 @@ function ParticipantDashboard({
       setSecAssignSpeaker(null); setSecAssignSearch(""); setSecAssignResults([]); return;
     }
     const token = localStorage.getItem("access_token") || "";
-    const r = await fetch(`http://localhost:8000/api/reports/${secAssignSpeaker.id}/speaker`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ user_id: speakerUser.id }) });
+    const r = await fetch(`${API_BASE}/api/reports/${secAssignSpeaker.id}/speaker`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ user_id: speakerUser.id }) });
     if (!r.ok) { const err = await r.json().catch(() => ({})); alert(err?.detail || "Ошибка"); return; }
     setCurReports(prev => ({ ...prev, [secAssignSpeaker.section_id]: (prev[secAssignSpeaker.section_id]||[]).map((r: any) => r.id === secAssignSpeaker.id ? { ...r, speaker_id: speakerUser.id, speaker_name: speakerUser.full_name } : r) }));
     setSecAssignSpeaker(null); setSecAssignSearch(""); setSecAssignResults([]);
@@ -2623,13 +2623,13 @@ function ParticipantDashboard({
         const fbMap: Record<string, { average: number; count: number }> = {};
         await Promise.all(reps.map(async (r: any) => {
           try {
-            const cr = await fetch(`http://localhost:8000/api/reports/${r.id}/comments`, {
+            const cr = await fetch(`${API_BASE}/api/reports/${r.id}/comments`, {
               headers: { Authorization: `Bearer ${token}` }, cache: "no-store"
             });
             comsMap[r.id] = cr.ok ? await cr.json() : [];
           } catch { comsMap[r.id] = []; }
           try {
-            const fr = await fetch(`http://localhost:8000/api/reports/${r.id}/feedback`, {
+            const fr = await fetch(`${API_BASE}/api/reports/${r.id}/feedback`, {
               headers: { Authorization: `Bearer ${token}` }, cache: "no-store"
             });
             if (fr.ok) { const d = await fr.json(); fbMap[r.id] = { average: d.average || 0, count: d.count || 0 }; }
@@ -2723,12 +2723,12 @@ function ParticipantDashboard({
       const cmmMap: Record<string, any[]> = {};
       for (const sec of allSecs) {
         try {
-          const r = await fetch(`http://localhost:8000/api/sections/${sec.id}/reports`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+          const r = await fetch(`${API_BASE}/api/sections/${sec.id}/reports`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
           const reps = r.ok ? await r.json() : [];
           repsMap[sec.id] = reps;
           for (const rep of reps) {
             try {
-              const cr = await fetch(`http://localhost:8000/api/reports/${rep.id}/comments`, { cache: "no-store" });
+              const cr = await fetch(`${API_BASE}/api/reports/${rep.id}/comments`, { cache: "no-store" });
               cmmMap[rep.id] = cr.ok ? await cr.json() : [];
             } catch { cmmMap[rep.id] = []; }
           }
@@ -2780,7 +2780,7 @@ function ParticipantDashboard({
         for (const ev of evRes || []) {
           try {
             const token = localStorage.getItem("access_token") || "";
-            const r = await fetch(`http://localhost:8000/api/events/${ev.id}/curators`, { headers: { Authorization: `Bearer ${token}` } });
+            const r = await fetch(`${API_BASE}/api/events/${ev.id}/curators`, { headers: { Authorization: `Bearer ${token}` } });
             if (r.ok) {
               const ms: any[] = await r.json();
               if (ms.some((m: any) => m.user_id === user.id)) {

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { eventsAPI, tasksAPI, usersAPI, reportsAPI, participantsAPI } from "../api/apiClient.ts";
 import type { Task, TaskStatus, EventData as EventItem, EventStatus, Section, User, Report } from "../api/apiClient.ts";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 function _secFetch(method: string, path: string, body?: any) {
   const t = localStorage.getItem("access_token") || "";
   const headers: Record<string,string> = { "Content-Type": "application/json" };
