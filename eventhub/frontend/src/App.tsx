@@ -1403,6 +1403,39 @@ function ChatView({
   const [dmSearching, setDmSearching] = useState(false);
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+
+  // WebSocket — подключение к активной комнате
+  useEffect(() => {
+    if (demoMode || !activeRoomId) return;
+    // Закрываем предыдущее соединение
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    const ws = createChatSocket(activeRoomId, (event) => {
+      if (event.type === "history") {
+        const mapped = event.items.map((m: any) => ({
+          id: m.id, room_id: m.room_id, user_id: m.user_id,
+          user_name: m.user_id === user.id ? user.full_name : (m.user_name || m.sender_name || "Пользователь"),
+          text: m.text, created_at: m.created_at,
+        }));
+        setMessages((prev) => [...prev.filter((m) => m.room_id !== activeRoomId), ...mapped]);
+      } else if (event.type === "message") {
+        const m = event.item;
+        setMessages((prev) => {
+          if (prev.some((p) => p.id === m.id)) return prev;
+          return [...prev, {
+            id: m.id, room_id: m.room_id, user_id: m.user_id,
+            user_name: m.user_id === user.id ? user.full_name : ((m as any).user_name || "Пользователь"),
+            text: m.text, created_at: m.created_at,
+          }];
+        });
+      }
+    });
+    wsRef.current = ws;
+    return () => { ws.close(); };
+  }, [activeRoomId, demoMode]);
 
   // Загрузка комнат
   useEffect(() => {
@@ -1487,36 +1520,30 @@ function ChatView({
       setMessages((prev) => [...prev, { id: `msg-${Date.now()}`, room_id: activeRoomId, user_id: user.id, user_name: user.full_name, text, created_at: new Date().toISOString() }]);
       return;
     }
-    try {
-      const msg = await apiFetch<any>("POST", `/api/chat/${activeRoomId}/messages`, { text });
-      setMessages((prev) => [...prev, {
-        id: msg.id || `msg-${Date.now()}`,
-        room_id: msg.room_id || activeRoomId,
-        user_id: msg.user_id || user.id,
-        user_name: user.full_name,
-        text: msg.text || text,
-        created_at: msg.created_at || new Date().toISOString(),
-      }]);
-    } catch {
-      setMessages((prev) => [...prev, { id: `msg-${Date.now()}`, room_id: activeRoomId, user_id: user.id, user_name: user.full_name, text, created_at: new Date().toISOString() }]);
+
+    // Отправка через WebSocket если подключен, иначе через REST
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ text }));
+    } else {
+      try {
+        const msg = await apiFetch<any>("POST", `/api/chat/${activeRoomId}/messages`, { text });
+        setMessages((prev) => [...prev, {
+          id: msg.id || `msg-${Date.now()}`,
+          room_id: msg.room_id || activeRoomId,
+          user_id: msg.user_id || user.id,
+          user_name: user.full_name,
+          text: msg.text || text,
+          created_at: msg.created_at || new Date().toISOString(),
+        }]);
+      } catch {
+        setMessages((prev) => [...prev, { id: `msg-${Date.now()}`, room_id: activeRoomId, user_id: user.id, user_name: user.full_name, text, created_at: new Date().toISOString() }]);
+      }
     }
   };
 
-  // Переключение комнаты
+  // Переключение комнаты — WebSocket подключится через useEffect при смене activeRoomId
   const switchRoom = async (roomId: string) => {
     setActiveRoomId(roomId);
-    if (!demoMode) {
-      try {
-        const data = await apiFetch<any>("GET", `/api/chat/${roomId}/messages?limit=50`);
-        const items = data.items || data || [];
-        const fetched = (Array.isArray(items) ? items : []).map((m: any) => ({
-          id: m.id, room_id: m.room_id, user_id: m.user_id,
-          user_name: m.user_id === user.id ? user.full_name : (m.user_name || m.sender_name || "Пользователь"),
-          text: m.text, created_at: m.created_at,
-        }));
-        setMessages((prev) => [...prev.filter((m) => m.room_id !== roomId), ...fetched]);
-      } catch {}
-    }
   };
 
   // Поиск для нового ЛС
