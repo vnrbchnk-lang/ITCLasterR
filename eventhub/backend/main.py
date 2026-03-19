@@ -29,11 +29,11 @@ app.add_middleware(
 )
 
 app.include_router(auth.router,         prefix="/api/auth",         tags=["Auth"])
+app.include_router(tasks.router,        prefix="/api",              tags=["Tasks"])
 app.include_router(events.router,       prefix="/api/events",       tags=["Events"])
 app.include_router(users_router,        prefix="/api/users",        tags=["Users"])
 app.include_router(sections_router,     prefix="/api/sections",     tags=["Sections"])
 app.include_router(reports_router,      prefix="/api/reports",      tags=["Reports"])
-app.include_router(tasks.router,        prefix="/api",              tags=["Tasks"])
 app.include_router(chat.router,         prefix="/api/chat",         tags=["Chat"])
 app.include_router(participants.router, prefix="/api",              tags=["Participants"])
 
