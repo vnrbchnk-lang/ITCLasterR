@@ -7,3 +7,4 @@ startCommand = "npx serve -s dist -l $PORT"
 
 [variables]
 NIXPACKS_NODE_VERSION = "20.19"
+VITE_API_URL = "https://itclasterr-production-e7f2.up.railway.app"
