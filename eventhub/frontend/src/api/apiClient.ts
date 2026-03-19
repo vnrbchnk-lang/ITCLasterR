@@ -295,6 +295,10 @@ export const sectionsAPI = {
   update: (id: string, data: Partial<Section>) =>
     api.patch<Section>(`/api/sections/${id}`, data),
 
+  // DELETE /api/sections/{id}
+  delete: (id: string) =>
+    api.delete(`/api/sections/${id}`),
+
   // POST /api/sections/{id}/reports
   createReport: (sectionId: string, data: Partial<Report>) =>
     api.post<Report>(`/api/sections/${sectionId}/reports`, data),
@@ -323,6 +327,10 @@ export const reportsAPI = {
   // PATCH /api/reports/{id}
   update: (id: string, data: Partial<Report>) =>
     api.patch<Report>(`/api/reports/${id}`, data),
+
+  // DELETE /api/reports/{id}
+  delete: (id: string) =>
+    api.delete(`/api/reports/${id}`),
 
   // GET /api/reports/my  — FIX: метода не было, нужен MyReportTab
   getMy: () =>

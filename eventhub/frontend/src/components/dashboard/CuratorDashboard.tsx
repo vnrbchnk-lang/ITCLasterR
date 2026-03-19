@@ -9,6 +9,8 @@ import {
 import type {
   User,
   Section,
+  SectionFormat,
+  PresentationFormat,
   Report,
   Comment,
   SectionReportOut,
@@ -130,7 +132,7 @@ function SectionModal({
     setSaving(true); setError("");
     const payload = {
       title: form.title.trim(),
-      format: form.format || undefined,
+      format: (form.format || undefined) as SectionFormat | undefined,
       location: form.location || undefined,
       section_start: form.section_start || undefined,
       section_end: form.section_end || undefined,
@@ -276,7 +278,7 @@ function ReportModal({
     const payload = {
       title: form.title.trim(),
       description: form.description || undefined,
-      presentation_format: form.presentation_format || undefined,
+      presentation_format: (form.presentation_format || undefined) as PresentationFormat | undefined,
       start_time: form.start_time || undefined,
       end_time: form.end_time || undefined,
     };
